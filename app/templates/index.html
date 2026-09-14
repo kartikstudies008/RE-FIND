@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+
+{% block title %}ReFind AI – Lost. Found. Reunited.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="hero-tagline">
+                    <i class="bi bi-stars"></i> Intelligent Lost &amp; Found Matching Platform
+                </div>
+                <h1 class="hero-title mb-3">
+                    Lost Something?<br>
+                    Found Something?<br>
+                    <span class="text-gradient">Let AI Help You Reunite.</span>
+                </h1>
+                <p class="hero-subtitle mb-4">
+                    ReFind AI intelligently matches lost and found reports using item details, location, date, category, and description similarity.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <a href="{{ url_for('main.report_lost') }}" class="btn btn-primary btn-lg px-4 py-3 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-octagon-fill text-warning"></i> Report Lost Item
+                    </a>
+                    <a href="{{ url_for('main.report_found') }}" class="btn btn-emerald btn-lg px-4 py-3 d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i> Report Found Item
+                    </a>
+                    <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light btn-lg px-3 py-3">
+                        <i class="bi bi-search"></i>
+                    </a>
+                </div>
+
+                <!-- Quick Inline Search -->
+                <form action="{{ url_for('main.browse') }}" method="GET" class="d-flex bg-white p-2 rounded-pill shadow-lg" style="max-width: 520px;">
+                    <input type="text" name="q" class="form-control border-0 rounded-pill ps-3 shadow-none" placeholder="Search item, brand, or location (e.g. Dell laptop, metro, wallet)...">
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                        Search
+                    </button>
+                </form>
+            </div>
+
+            <!-- Hero Visual: AI Match Showcase Simulation -->
+            <div class="col-lg-5">
+                <div class="hero-ai-card">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="badge bg-secondary-subtle text-white small px-2 py-1">
+                            <i class="bi bi-cpu-fill text-info me-1"></i> AI Neural Match Engine
+                        </span>
+                        <span class="badge bg-success ai-match-badge-pulse px-3 py-1">
+                            94% Match Found
+                        </span>
+                    </div>
+
+                    <!-- Comparison Simulation Box -->
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3">
+                        <div class="d-flex align-items-center gap-2 text-warning small fw-bold mb-1">
+                            <i class="bi bi-dot fs-3 text-danger"></i> LOST REPORT
+                        </div>
+                        <div class="text-white fw-semibold small">Black Dell Laptop with red sticker on back</div>
+                        <div class="text-slate-400 small"><i class="bi bi-geo-alt me-1"></i>Panipat Railway Station &bull; Sep 10</div>
+                    </div>
+
+                    <div class="text-center my-2 text-info fs-5">
+                        <i class="bi bi-arrow-down-up"></i>
+                    </div>
+
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3">
+                        <div class="d-flex align-items-center gap-2 text-info small fw-bold mb-1">
+                            <i class="bi bi-dot fs-3 text-success"></i> FOUND REPORT
+                        </div>
+                        <div class="text-white fw-semibold small">Dell black laptop having a red sticker</div>
+                        <div class="text-slate-400 small"><i class="bi bi-geo-alt me-1"></i>Near Panipat Railway Station &bull; Sep 10</div>
+                    </div>
+
+                    <!-- Live Breakdown Indicators -->
+                    <div class="small text-slate-400">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Category (Electronics)</span>
+                            <span class="text-success fw-bold">100% ✓</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Location &amp; Date Proximity</span>
+                            <span class="text-success fw-bold">96% ✓</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>TF-IDF Description Cosine Match</span>
+                            <span class="text-success fw-bold">92% ✓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Live Statistics Counters -->
+<section class="stats-strip container">
+    <div class="row g-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon lost">
+                    <i class="bi bi-question-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ total_lost }}</div>
+                    <div class="stat-label">Total Lost Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon found">
+                    <i class="bi bi-check2-all"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ total_found }}</div>
+                    <div class="stat-label">Total Found Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon reunited">
+                    <i class="bi bi-heart-pulse"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ total_reunited }}</div>
+                    <div class="stat-label">Successful Reunions</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon matches">
+                    <i class="bi bi-lightning-charge"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ active_matches }}</div>
+                    <div class="stat-label">Active AI Matches</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 my-3">
+    <div class="container">
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill mb-2">
+                3 Simple Steps
+            </span>
+            <h2 class="fw-bold fs-1">How ReFind AI Works</h2>
+            <p class="text-muted">
+                Our smart platform automates discovery so you don't have to manually browse hundreds of lost notices.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                    <div class="mx-auto mb-3 stat-icon lost" style="width:64px; height:64px; font-size:1.8rem;">
+                        <i class="bi bi-file-earmark-plus"></i>
+                    </div>
+                    <h5 class="fw-bold">1. Report Your Item</h5>
+                    <p class="text-muted small">
+                        Provide the item name, category, color, brand, location, date, and description with photo upload.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                    <div class="mx-auto mb-3 stat-icon matches" style="width:64px; height:64px; font-size:1.8rem;">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h5 class="fw-bold">2. AI Semantic Matching</h5>
+                    <p class="text-muted small">
+                        Our algorithm evaluates category (25%), location (20%), date (15%), color (10%), brand (10%), and TF-IDF description similarity (20%).
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                    <div class="mx-auto mb-3 stat-icon reunited" style="width:64px; height:64px; font-size:1.8rem;">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <h5 class="fw-bold">3. Reconnect &amp; Reunited</h5>
+                    <p class="text-muted small">
+                        Review high-confidence matches, safely contact the finder or owner, verify item ownership, and celebrate reunion!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Items Section -->
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4">
+            <div>
+                <h3 class="fw-bold mb-1">Recent Community Reports</h3>
+                <p class="text-muted small mb-0">Browse latest lost and found items submitted across campuses &amp; cities.</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <a href="{{ url_for('main.browse') }}" class="btn btn-outline-primary btn-sm px-3">
+                    View All Listings <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <ul class="nav nav-pills mb-4" id="itemTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4" id="lost-tab" data-bs-toggle="pill" data-bs-target="#lost-pane" type="button">
+                    <i class="bi bi-exclamation-octagon text-danger me-1"></i> Recent Lost ({% if recent_lost %}{{ recent_lost|length }}{% else %}0{% endif %})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="found-tab" data-bs-toggle="pill" data-bs-target="#found-pane" type="button">
+                    <i class="bi bi-check2-circle text-primary me-1"></i> Recent Found ({% if recent_found %}{{ recent_found|length }}{% else %}0{% endif %})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="itemTabContent">
+            <!-- Lost Tab -->
+            <div class="tab-pane fade show active" id="lost-pane">
+                <div class="row g-4">
+                    {% for item in recent_lost %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="refind-card">
+                            <div class="card-img-wrap">
+                                <img src="{{ item.image_url }}" alt="{{ item.item_name }}" loading="lazy">
+                                <span class="position-absolute top-0 start-0 m-3 badge-type-lost">
+                                    LOST
+                                </span>
+                                <span class="position-absolute top-0 end-0 m-3 badge bg-dark bg-opacity-75 small">
+                                    {{ item.category }}
+                                </span>
+                            </div>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h5 class="fw-bold mb-1 text-truncate">{{ item.item_name }}</h5>
+                                <div class="small text-muted mb-2">
+                                    <i class="bi bi-geo-alt text-danger me-1"></i>{{ item.location }}
+                                    <span class="mx-1">&bull;</span>
+                                    <i class="bi bi-calendar-event me-1"></i>{{ item.date.strftime('%b %d, %Y') }}
+                                </div>
+                                <p class="small text-slate-600 flex-grow-1 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    {{ item.description }}
+                                </p>
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                    <span class="badge bg-light text-dark border">
+                                        {% if item.brand %}{{ item.brand }}{% else %}General{% endif %}
+                                    </span>
+                                    <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="btn btn-outline-primary btn-sm">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 py-5 text-center text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        No lost items reported recently.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Found Tab -->
+            <div class="tab-pane fade" id="found-pane">
+                <div class="row g-4">
+                    {% for item in recent_found %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="refind-card">
+                            <div class="card-img-wrap">
+                                <img src="{{ item.image_url }}" alt="{{ item.item_name }}" loading="lazy">
+                                <span class="position-absolute top-0 start-0 m-3 badge-type-found">
+                                    FOUND
+                                </span>
+                                <span class="position-absolute top-0 end-0 m-3 badge bg-dark bg-opacity-75 small">
+                                    {{ item.category }}
+                                </span>
+                            </div>
+                            <div class="p-3 d-flex flex-column flex-grow-1">
+                                <h5 class="fw-bold mb-1 text-truncate">{{ item.item_name }}</h5>
+                                <div class="small text-muted mb-2">
+                                    <i class="bi bi-geo-alt text-primary me-1"></i>{{ item.location }}
+                                    <span class="mx-1">&bull;</span>
+                                    <i class="bi bi-calendar-event me-1"></i>{{ item.date.strftime('%b %d, %Y') }}
+                                </div>
+                                <p class="small text-slate-600 flex-grow-1 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    {{ item.description }}
+                                </p>
+                                <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                    <span class="badge bg-light text-dark border">
+                                        {% if item.brand %}{{ item.brand }}{% else %}General{% endif %}
+                                    </span>
+                                    <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="btn btn-outline-primary btn-sm">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="col-12 py-5 text-center text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        No found items reported recently.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        <div class="p-5 rounded-4 bg-dark text-white position-relative overflow-hidden shadow-lg">
+            <div class="position-relative z-2 max-w-600 mx-auto">
+                <span class="brand-badge mb-3 d-inline-block">Fast &amp; Accurate</span>
+                <h2 class="fw-bold mb-3">Reunite Lost Possessions Today</h2>
+                <p class="text-slate-400 mb-4">
+                    Join hundreds of users discovering lost items faster through state-of-the-art machine learning matching.
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{{ url_for('main.report_lost') }}" class="btn btn-primary px-4 py-2">
+                        Report Lost Item Now
+                    </a>
+                    <a href="{{ url_for('main.browse') }}" class="btn btn-outline-light px-4 py-2">
+                        Search Database
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

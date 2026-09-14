@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management – ReFind AI Admin{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 mb-1">
+                <a href="{{ url_for('admin.dashboard') }}" class="text-muted text-decoration-none small">
+                    <i class="bi bi-arrow-left me-1"></i> Admin Console
+                </a>
+            </div>
+            <h2 class="fw-bold mb-0">Platform User Accounts</h2>
+        </div>
+        <span class="badge bg-dark px-3 py-2 fs-6">
+            {{ users|length }} Total Registered Users
+        </span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Items Posted</th>
+                        <th>Joined</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon found rounded-circle" style="width: 36px; height: 36px; font-size: 1rem;">
+                                    <i class="bi bi-person"></i>
+                                </div>
+                                <span class="fw-bold">{{ u.name }}</span>
+                            </div>
+                        </td>
+                        <td class="small">{{ u.email }}</td>
+                        <td class="small">{{ u.phone }}</td>
+                        <td>
+                            <span class="badge {% if u.role == 'ADMIN' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                {{ u.role }}
+                            </span>
+                        </td>
+                        <td class="small">{{ u.items.count() }} items</td>
+                        <td class="small text-muted">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+                        <td class="text-end">
+                            <div class="d-flex justify-content-end gap-1">
+                                {% if u.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('admin.toggle_user_role', user_id=u.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Toggle USER / ADMIN role">
+                                        <i class="bi bi-person-gear me-1"></i> Toggle Role
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('admin.delete_user', user_id=u.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete user" onclick="return confirm('Permanently remove this user and all their items?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-light text-muted border p-2 small">Your Account</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

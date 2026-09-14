@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard – ReFind AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Top Welcome Banner -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1">Welcome back, {{ current_user.name }}!</h2>
+            <p class="text-muted small mb-0">Track your reported lost &amp; found items and monitor intelligent AI matches in real time.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            <a href="{{ url_for('main.report_lost') }}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Report Lost
+            </a>
+            <a href="{{ url_for('main.report_found') }}" class="btn btn-emerald btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Report Found
+            </a>
+        </div>
+    </div>
+
+    <!-- User Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon lost">
+                    <i class="bi bi-exclamation-octagon"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ lost_count }}</div>
+                    <div class="stat-label">Lost Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon found">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ found_count }}</div>
+                    <div class="stat-label">Found Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon matches">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ potential_matches_count }}</div>
+                    <div class="stat-label">Potential Matches</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon reunited">
+                    <i class="bi bi-heart-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-number">{{ resolved_count }}</div>
+                    <div class="stat-label">Resolved</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+        <ul class="nav nav-pills mb-4" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4" id="lost-items-tab" data-bs-toggle="pill" data-bs-target="#lost-items-pane" type="button">
+                    <i class="bi bi-exclamation-octagon text-danger me-1"></i> My Lost Items ({{ lost_items|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="found-items-tab" data-bs-toggle="pill" data-bs-target="#found-items-pane" type="button">
+                    <i class="bi bi-check2-circle text-primary me-1"></i> My Found Items ({{ found_items|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="ai-matches-tab" data-bs-toggle="pill" data-bs-target="#ai-matches-pane" type="button">
+                    <i class="bi bi-cpu text-info me-1"></i> AI Suggested Matches ({{ matches|length }})
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabsContent">
+            <!-- TAB 1: MY LOST ITEMS -->
+            <div class="tab-pane fade show active" id="lost-items-pane">
+                {% if lost_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Location</th>
+                                <th>Date Lost</th>
+                                <th>Status</th>
+                                <th>AI Matches</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in lost_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ item.image_url }}" alt="{{ item.item_name }}" class="rounded-3 object-fit-cover" style="width: 46px; height: 46px;">
+                                        <div>
+                                            <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="fw-bold text-dark text-decoration-none">
+                                                {{ item.item_name }}
+                                            </a>
+                                            {% if item.brand %}
+                                            <div class="small text-muted">{{ item.brand }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ item.category }}</span></td>
+                                <td class="small">{{ item.location }}</td>
+                                <td class="small">{{ item.date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <span class="badge {% if item.status == 'resolved' %}bg-success{% elif item.status == 'matched' %}bg-info text-dark{% else %}bg-primary{% endif %} text-uppercase">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set match_count = item.lost_matches.count() %}
+                                    {% if match_count > 0 %}
+                                    <a href="{{ url_for('main.matches_dashboard', item_id=item.id) }}" class="badge bg-info-subtle text-info-emphasis text-decoration-none p-2">
+                                        <i class="bi bi-cpu me-1"></i> {{ match_count }} Match(es)
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">Scanning...</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="btn btn-outline-primary btn-sm" title="View details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if item.status != 'resolved' %}
+                                        <form method="POST" action="{{ url_for('main.mark_resolved', item_id=item.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Mark as Resolved" onclick="return confirm('Mark this item as resolved/reunited?')">
+                                                <i class="bi bi-check2"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('main.delete_item', item_id=item.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete listing" onclick="return confirm('Delete this listing?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="py-5 text-center text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    You haven't reported any lost items yet.
+                    <div class="mt-3">
+                        <a href="{{ url_for('main.report_lost') }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Report Lost Item
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- TAB 2: MY FOUND ITEMS -->
+            <div class="tab-pane fade" id="found-items-pane">
+                {% if found_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>Item</th>
+                                <th>Category</th>
+                                <th>Location Found</th>
+                                <th>Date Found</th>
+                                <th>Status</th>
+                                <th>AI Matches</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in found_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <img src="{{ item.image_url }}" alt="{{ item.item_name }}" class="rounded-3 object-fit-cover" style="width: 46px; height: 46px;">
+                                        <div>
+                                            <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="fw-bold text-dark text-decoration-none">
+                                                {{ item.item_name }}
+                                            </a>
+                                            {% if item.brand %}
+                                            <div class="small text-muted">{{ item.brand }}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ item.category }}</span></td>
+                                <td class="small">{{ item.location }}</td>
+                                <td class="small">{{ item.date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <span class="badge {% if item.status == 'resolved' %}bg-success{% elif item.status == 'matched' %}bg-info text-dark{% else %}bg-primary{% endif %} text-uppercase">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set match_count = item.found_matches.count() %}
+                                    {% if match_count > 0 %}
+                                    <a href="{{ url_for('main.matches_dashboard', item_id=item.id) }}" class="badge bg-info-subtle text-info-emphasis text-decoration-none p-2">
+                                        <i class="bi bi-cpu me-1"></i> {{ match_count }} Match(es)
+                                    </a>
+                                    {% else %}
+                                    <span class="text-muted small">Scanning...</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="btn btn-outline-primary btn-sm" title="View details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if item.status != 'resolved' %}
+                                        <form method="POST" action="{{ url_for('main.mark_resolved', item_id=item.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Mark as Reunited" onclick="return confirm('Mark this item as returned/resolved?')">
+                                                <i class="bi bi-check2"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('main.delete_item', item_id=item.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete listing" onclick="return confirm('Delete this listing?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="py-5 text-center text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    You haven't reported any found items yet.
+                    <div class="mt-3">
+                        <a href="{{ url_for('main.report_found') }}" class="btn btn-emerald btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Report Found Item
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- TAB 3: SUGGESTED MATCHES -->
+            <div class="tab-pane fade" id="ai-matches-pane">
+                {% if matches %}
+                <div class="row g-3">
+                    {% for m in matches %}
+                    <div class="col-md-6">
+                        <div class="card border rounded-3 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge {{ m.badge_class }} fs-6">
+                                    🤖 {{ m.match_score }}% Match
+                                </span>
+                                <span class="small text-muted">{{ m.confidence_label }}</span>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-3 my-2 small">
+                                <div class="text-truncate" style="max-width: 45%;">
+                                    <span class="badge badge-type-lost small">LOST</span>
+                                    <div class="fw-bold text-truncate">{{ m.lost_item.item_name }}</div>
+                                </div>
+                                <div class="text-primary px-2"><i class="bi bi-arrow-right fs-5"></i></div>
+                                <div class="text-truncate" style="max-width: 45%;">
+                                    <span class="badge badge-type-found small">FOUND</span>
+                                    <div class="fw-bold text-truncate">{{ m.found_item.item_name }}</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-2">
+                                <a href="{{ url_for('main.item_details', item_id=m.lost_item_id) }}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                    Review Match Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('main.matches_dashboard') }}" class="btn btn-primary btn-sm px-4">
+                        View All AI Suggested Matches <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="py-5 text-center text-muted">
+                    <i class="bi bi-cpu fs-1 d-block mb-2"></i>
+                    No AI match suggestions at this moment. The matching service checks periodically and immediately upon new reports.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

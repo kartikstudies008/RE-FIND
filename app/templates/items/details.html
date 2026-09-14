@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ item.item_name }} – ReFind AI Details{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('main.browse') }}" class="text-decoration-none">Browse</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ item.item_name }}</li>
+        </ol>
+    </nav>
+
+    {% if match_highlight %}
+    <div class="alert alert-success border-0 rounded-4 shadow-sm p-3 mb-4 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-stars fs-2 text-success"></i>
+            <div>
+                <h5 class="fw-bold mb-0">Report Published &amp; AI Engine Executed!</h5>
+                <p class="mb-0 small text-muted">Scroll down to see the real-time AI match recommendations computed for this item.</p>
+            </div>
+        </div>
+        <a href="#ai-matches-section" class="btn btn-emerald btn-sm px-3 py-2">
+            Jump to Matches <i class="bi bi-arrow-down ms-1"></i>
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="row g-4 mb-5">
+        <!-- Item High-Resolution Image -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div style="height: 380px; background: #0f172a;" class="d-flex align-items-center justify-content-center position-relative">
+                    <img src="{{ item.image_url }}" alt="{{ item.item_name }}" class="w-100 h-100 object-fit-cover">
+                    <span class="position-absolute top-0 start-0 m-3 {% if item.type == 'lost' %}badge-type-lost{% else %}badge-type-found{% endif %} fs-6">
+                        {{ item.type|upper }} REPORT
+                    </span>
+                    <span class="position-absolute top-0 end-0 m-3 badge bg-dark bg-opacity-75 fs-6">
+                        {{ item.category }}
+                    </span>
+                </div>
+                {% if item.status == 'resolved' %}
+                <div class="p-3 bg-success-light border-top text-success text-center fw-bold">
+                    🎉 Item Reunited Successfully
+                </div>
+                {% elif item.status == 'matched' %}
+                <div class="p-3 bg-info-subtle border-top text-info-emphasis text-center fw-bold">
+                    🤝 Active AI Match Identified
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Poster Info Card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mt-4">
+                <h6 class="fw-bold mb-3 text-muted text-uppercase small">Posted By Community Member</h6>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="stat-icon found" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold">{{ item.owner.name }}</div>
+                        <div class="small text-muted">Member since {{ item.owner.created_at.strftime('%b %Y') }}</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    {% if current_user.is_authenticated and current_user.id != item.user_id %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#contactModal">
+                        <i class="bi bi-envelope me-1"></i> Contact {% if item.type == 'lost' %}Owner{% else %}Finder{% endif %}
+                    </button>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated and (current_user.id == item.user_id or current_user.is_admin) %}
+                        {% if item.status != 'resolved' %}
+                        <form method="POST" action="{{ url_for('main.mark_resolved', item_id=item.id) }}">
+                            <button type="submit" class="btn btn-emerald w-100" onclick="return confirm('Mark this item as successfully reunited? This will celebrate resolution on the platform!')">
+                                <i class="bi bi-check-circle me-1"></i> Mark as Resolved (Reunited)
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('main.delete_item', item_id=item.id) }}" class="mt-1">
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('Are you sure you want to delete this listing permanently?')">
+                                <i class="bi bi-trash me-1"></i> Delete Listing
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated and current_user.id != item.user_id %}
+                    <button class="btn btn-link btn-sm text-danger text-decoration-none mt-2" data-bs-toggle="modal" data-bs-target="#reportModal">
+                        <i class="bi bi-flag me-1"></i> Report Suspicious Listing
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Full Details -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <span class="badge bg-light text-dark border px-3 py-2">
+                        ID: #{{ item.id }}
+                    </span>
+                    <span class="small text-muted">
+                        Reported {{ item.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    </span>
+                </div>
+
+                <h2 class="fw-bold mb-3">{{ item.item_name }}</h2>
+
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <div class="row g-3 small">
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-tag text-primary me-1"></i> Category</div>
+                            <div class="fw-bold fs-6">{{ item.category }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-geo-alt text-danger me-1"></i> Location {% if item.type == 'lost' %}Lost{% else %}Found{% endif %}</div>
+                            <div class="fw-bold fs-6">{{ item.location }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-calendar3 text-info me-1"></i> Date</div>
+                            <div class="fw-bold fs-6">{{ item.date.strftime('%A, %B %d, %Y') }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-clock me-1"></i> Time</div>
+                            <div class="fw-bold fs-6">{{ item.time.strftime('%I:%M %p') if item.time else 'Approximate' }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-palette text-warning me-1"></i> Color</div>
+                            <div class="fw-bold fs-6">{{ item.color or 'Not specified' }}</div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-muted mb-1"><i class="bi bi-award text-secondary me-1"></i> Brand</div>
+                            <div class="fw-bold fs-6">{{ item.brand or 'Not specified' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold mb-2">Description &amp; Identifying Features</h5>
+                <p class="text-secondary mb-4 leading-relaxed" style="white-space: pre-line;">{{ item.description }}</p>
+
+                <!-- Current Status Indicator -->
+                <div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small">Current Status:</span>
+                        <span class="badge {% if item.status == 'resolved' %}bg-success{% elif item.status == 'matched' %}bg-info text-dark{% else %}bg-primary{% endif %} ms-2 text-uppercase">
+                            {{ item.status }}
+                        </span>
+                    </div>
+                    {% if item.is_flagged %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="bi bi-shield-exclamation me-1"></i> Under Admin Review
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI MATCHES SECTION -->
+    <div id="ai-matches-section" class="pt-4 border-top">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <span class="badge bg-info-subtle text-info-emphasis fw-bold px-3 py-1 rounded-pill">
+                    <i class="bi bi-cpu-fill me-1"></i> Intelligent Match Engine
+                </span>
+                <h3 class="fw-bold mt-2 mb-1">AI Suggested Matches for this Item</h3>
+                <p class="text-muted small mb-0">
+                    Matches calculated using category (25%), location (20%), date (15%), color (10%), brand (10%), and TF-IDF cosine similarity (20%).
+                </p>
+            </div>
+        </div>
+
+        {% if matches %}
+        <div class="row g-4">
+            {% for m in matches %}
+                {% set counterpart = m.found_item if item.type == 'lost' else m.lost_item %}
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 position-relative">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge {{ m.badge_class }} px-3 py-2 fs-6">
+                                    🤖 {{ m.match_score }}% Match
+                                </span>
+                                <span class="badge bg-light text-dark border ms-2">
+                                    {{ m.confidence_label }}
+                                </span>
+                            </div>
+                            <span class="badge bg-secondary-subtle text-dark small">
+                                Status: {{ m.status|capitalize }}
+                            </span>
+                        </div>
+
+                        <!-- Paired item summary -->
+                        <div class="d-flex gap-3 mb-3 p-3 bg-light rounded-3">
+                            <img src="{{ counterpart.image_url }}" alt="{{ counterpart.item_name }}" class="rounded-3 object-fit-cover" style="width: 80px; height: 80px;">
+                            <div class="flex-grow-1 overflow-hidden">
+                                <span class="badge {% if counterpart.type == 'lost' %}badge-type-lost{% else %}badge-type-found{% endif %} small mb-1">
+                                    POTENTIAL {{ counterpart.type|upper }}
+                                </span>
+                                <h6 class="fw-bold mb-1 text-truncate">{{ counterpart.item_name }}</h6>
+                                <div class="small text-muted text-truncate">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ counterpart.location }} &bull; {{ counterpart.date.strftime('%b %d') }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Attribute Score Breakdown Checklist -->
+                        <div class="match-breakdown-card p-3 mb-3 small">
+                            <div class="attribute-row">
+                                <span><i class="bi bi-tag me-1"></i> Category (25%)</span>
+                                <span class="fw-bold {% if m.category_score >= 70 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.category_score }}% {% if m.category_score >= 70 %}✓{% endif %}
+                                </span>
+                            </div>
+                            <div class="attribute-row">
+                                <span><i class="bi bi-geo-alt me-1"></i> Location (20%)</span>
+                                <span class="fw-bold {% if m.location_score >= 60 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.location_score }}% {% if m.location_score >= 60 %}✓{% endif %}
+                                </span>
+                            </div>
+                            <div class="attribute-row">
+                                <span><i class="bi bi-calendar-event me-1"></i> Date Proximity (15%)</span>
+                                <span class="fw-bold {% if m.date_score >= 50 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.date_score }}% {% if m.date_score >= 50 %}✓{% endif %}
+                                </span>
+                            </div>
+                            <div class="attribute-row">
+                                <span><i class="bi bi-palette me-1"></i> Color (10%)</span>
+                                <span class="fw-bold {% if m.color_score >= 60 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.color_score }}% {% if m.color_score >= 60 %}✓{% endif %}
+                                </span>
+                            </div>
+                            <div class="attribute-row">
+                                <span><i class="bi bi-award me-1"></i> Brand (10%)</span>
+                                <span class="fw-bold {% if m.brand_score >= 60 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.brand_score }}% {% if m.brand_score >= 60 %}✓{% endif %}
+                                </span>
+                            </div>
+                            <div class="attribute-row">
+                                <span><i class="bi bi-file-text me-1"></i> Description TF-IDF Cosine (20%)</span>
+                                <span class="fw-bold {% if m.description_score >= 50 %}text-success{% else %}text-muted{% endif %}">
+                                    {{ m.description_score }}% {% if m.description_score >= 50 %}✓{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Match Action Buttons -->
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="{{ url_for('main.item_details', item_id=counterpart.id) }}" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                View Matched Item
+                            </a>
+                            {% if current_user.is_authenticated and (current_user.id == item.user_id or current_user.is_admin) %}
+                                {% if m.status != 'accepted' %}
+                                <form method="POST" action="{{ url_for('main.match_action', match_id=m.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="btn btn-emerald btn-sm">
+                                        <i class="bi bi-check2"></i> Accept Match
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('main.match_action', match_id=m.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Dismiss match">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-success-subtle text-success border p-2">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Accepted
+                                </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-5 bg-white rounded-4 border text-center">
+            <div class="stat-icon matches mx-auto mb-3" style="width: 64px; height: 64px; font-size: 1.8rem;">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <h5 class="fw-bold">No High-Confidence Matches Yet</h5>
+            <p class="text-muted small max-w-500 mx-auto mb-0">
+                Our algorithm requires a minimum score of 60% before suggesting a match. As new reports arrive in the database, ReFind AI checks automatically and notifies you in real-time.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Contact Owner/Finder Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="contactModalLabel">
+                    <i class="bi bi-chat-dots text-primary me-2"></i>Contact {{ item.owner.name }}
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="small text-muted">
+                    Send a private message regarding <strong>{{ item.item_name }}</strong>. Your registered name and phone will be shared so the owner/finder can coordinate return safely.
+                </p>
+                <form method="POST" action="{{ url_for('main.contact_owner', item_id=item.id) }}">
+                    {{ contact_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ contact_form.subject.label(class="form-label") }}
+                        {{ contact_form.subject(class="form-control", value="Inquiry regarding " + item.item_name) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ contact_form.message.label(class="form-label") }}
+                        {{ contact_form.message(class="form-control", rows=4, placeholder="Hi, I saw your report. I believe this belongs to me / I found this item. Can we verify via...") }}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2">
+                            <i class="bi bi-send me-1"></i> Send In-App Notification
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Item Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger" id="reportModalLabel">
+                    <i class="bi bi-shield-exclamation me-2"></i>Flag Listing for Admin Review
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p class="small text-muted">
+                    If this listing contains inappropriate content, false claims, spam, or abusive behavior, describe it below.
+                </p>
+                <form method="POST" action="{{ url_for('main.report_item', item_id=item.id) }}">
+                    {{ report_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ report_form.reason.label(class="form-label") }}
+                        {{ report_form.reason(class="form-control", rows=4, placeholder="Please describe why this listing should be reviewed by an administrator...") }}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger py-2">
+                            Submit Report to Moderation
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Control Center – ReFind AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <div class="d-inline-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-dark text-white px-2 py-1">ADMIN CONSOLE</span>
+                <h2 class="fw-bold mb-0">Platform Overview &amp; Moderation</h2>
+            </div>
+            <p class="text-muted small mb-0">Manage community listings, review suspicious reports, and monitor system metrics.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-people me-1"></i> Users
+            </a>
+            <a href="{{ url_for('admin.items') }}" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-box-seam me-1"></i> Items Moderation
+            </a>
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-flag me-1"></i> Reports ({{ pending_reports }})
+            </a>
+        </div>
+    </div>
+
+    <!-- Admin Metric Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3">{{ total_users }}</div>
+                    <div class="stat-label" style="font-size: 0.72rem;">Total Users</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3">{{ total_lost }}</div>
+                    <div class="stat-label text-danger" style="font-size: 0.72rem;">Lost Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3">{{ total_found }}</div>
+                    <div class="stat-label text-primary" style="font-size: 0.72rem;">Found Items</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3">{{ total_matches }}</div>
+                    <div class="stat-label text-info" style="font-size: 0.72rem;">AI Matches</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3">{{ total_resolved }}</div>
+                    <div class="stat-label text-success" style="font-size: 0.72rem;">Reunions</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card p-3">
+                <div>
+                    <div class="stat-number fs-3 {% if pending_reports > 0 %}text-danger{% endif %}">{{ pending_reports }}</div>
+                    <div class="stat-label" style="font-size: 0.72rem;">Open Reports</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Recent Reports List -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Flagged Item Reports</h5>
+                    <a href="{{ url_for('admin.reports') }}" class="small text-decoration-none">View All</a>
+                </div>
+
+                {% if recent_reports %}
+                <div class="list-group list-group-flush">
+                    {% for r in recent_reports %}
+                    <div class="list-group-item px-0 py-3 border-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <a href="{{ url_for('main.item_details', item_id=r.item_id) }}" class="fw-bold text-dark text-decoration-none">
+                                {{ r.item.item_name }}
+                            </a>
+                            <span class="badge {% if r.status == 'pending' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {{ r.status|upper }}
+                            </span>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            Reported by <strong>{{ r.reporter.name }}</strong> &bull; {{ r.created_at.strftime('%b %d, %Y') }}
+                        </div>
+                        <p class="small text-secondary mb-2 bg-light p-2 rounded">
+                            "{{ r.reason }}"
+                        </p>
+                        <div class="d-flex gap-2">
+                            <form method="POST" action="{{ url_for('admin.resolve_report', report_id=r.id) }}">
+                                <button type="submit" class="btn btn-outline-success btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                    Mark Reviewed
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_item', item_id=r.item_id) }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2" style="font-size: 0.75rem;" onclick="return confirm('Delete reported item permanently?')">
+                                    Delete Listing
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="py-5 text-center text-muted">
+                    <i class="bi bi-shield-check fs-1 text-success d-block mb-2"></i>
+                    No flagged reports pending moderation!
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Listings Activity -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Latest Community Listings</h5>
+                    <a href="{{ url_for('admin.items') }}" class="small text-decoration-none">Moderate All</a>
+                </div>
+
+                {% if recent_items %}
+                <div class="list-group list-group-flush">
+                    {% for item in recent_items %}
+                    <div class="list-group-item px-0 py-2 border-0 border-bottom d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="{{ item.image_url }}" alt="{{ item.item_name }}" class="rounded-2 object-fit-cover" style="width: 42px; height: 42px;">
+                            <div>
+                                <a href="{{ url_for('main.item_details', item_id=item.id) }}" class="fw-bold text-dark text-decoration-none small">
+                                    {{ item.item_name }}
+                                </a>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    <span class="badge {% if item.type == 'lost' %}badge-type-lost{% else %}badge-type-found{% endif %} py-0 px-1 me-1">
+                                        {{ item.type|upper }}
+                                    </span>
+                                    {{ item.location }} &bull; by {{ item.owner.name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-1">
+                            <form method="POST" action="{{ url_for('admin.toggle_item_flag', item_id=item.id) }}">
+                                <button type="submit" class="btn btn-sm {% if item.is_flagged %}btn-warning{% else %}btn-outline-secondary{% endif %}" title="Toggle suspicious flag">
+                                    <i class="bi bi-flag"></i>
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.delete_item', item_id=item.id) }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete listing" onclick="return confirm('Delete this listing?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="py-5 text-center text-muted">No items in the database.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

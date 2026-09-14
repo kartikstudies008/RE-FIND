@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications – ReFind AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1">Notifications &amp; Alerts</h2>
+            <p class="text-muted small mb-0">System updates, match recommendations, and messages from community members.</p>
+        </div>
+        <div>
+            <form method="POST" action="{{ url_for('main.mark_all_notifications_read') }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-check2-all me-1"></i> Mark All as Read
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        {% if notifications %}
+        <div class="list-group list-group-flush">
+            {% for n in notifications %}
+            <div id="notif-row-{{ n.id }}" class="list-group-item p-3 border-0 border-bottom d-flex align-items-start justify-content-between gap-3 {% if not n.is_read %}bg-light rounded-3 my-1{% endif %}">
+                <div class="d-flex align-items-start gap-3 flex-grow-1">
+                    <div class="stat-icon {% if 'Match' in n.title %}matches{% elif 'Message' in n.title %}found{% else %}reunited{% endif %} flex-shrink-0" style="width: 44px; height: 44px; font-size: 1.2rem;">
+                        {% if 'Match' in n.title %}
+                            <i class="bi bi-cpu"></i>
+                        {% elif 'Message' in n.title %}
+                            <i class="bi bi-chat-text"></i>
+                        {% else %}
+                            <i class="bi bi-bell"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h6 class="fw-bold mb-0">{{ n.title }}</h6>
+                            {% if not n.is_read %}
+                            <span class="badge bg-danger rounded-pill" style="font-size: 0.65rem;">NEW</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-secondary small mb-2" style="white-space: pre-line;">{{ n.message }}</p>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="small text-muted"><i class="bi bi-clock me-1"></i>{{ n.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                            {% if n.link %}
+                            <a href="{{ n.link }}" class="small fw-semibold text-primary text-decoration-none">
+                                View Details <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not n.is_read %}
+                <button class="btn btn-link btn-sm text-muted text-decoration-none btn-mark-notif-read" data-notif-id="{{ n.id }}" title="Mark as read">
+                    <i class="bi bi-check2"></i>
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-5 text-center text-muted">
+            <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+            You have no notifications at this time.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

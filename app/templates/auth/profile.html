@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}User Profile – ReFind AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- Sidebar profile overview -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <div class="mx-auto mb-3 stat-icon found" style="width: 80px; height: 80px; font-size: 2.2rem;">
+                    <i class="bi bi-person"></i>
+                </div>
+                <h4 class="fw-bold mb-1">{{ current_user.name }}</h4>
+                <div class="text-muted small mb-2">{{ current_user.email }}</div>
+                <span class="badge {% if current_user.is_admin %}bg-dark{% else %}bg-primary-subtle text-primary{% endif %} px-3 py-1 rounded-pill mx-auto mb-3">
+                    {{ current_user.role }}
+                </span>
+
+                <hr class="my-3">
+
+                <div class="row g-2 text-start small">
+                    <div class="col-6">
+                        <div class="text-muted">Member Since</div>
+                        <div class="fw-semibold">{{ current_user.created_at.strftime('%b %d, %Y') }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted">Phone Number</div>
+                        <div class="fw-semibold">{{ current_user.phone }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity summary card -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 mt-4">
+                <h6 class="fw-bold mb-3">Your Contributions</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="bi bi-exclamation-octagon text-danger me-2"></i>Lost Items Reported</span>
+                    <span class="fw-bold">{{ lost_count }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted"><i class="bi bi-check2-circle text-primary me-2"></i>Found Items Reported</span>
+                    <span class="fw-bold">{{ found_count }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted"><i class="bi bi-heart text-success me-2"></i>Successfully Reunited</span>
+                    <span class="fw-bold text-success">{{ resolved_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5">
+                <h4 class="fw-bold mb-2">Edit Profile</h4>
+                <p class="text-muted small mb-4">Keep your contact information updated so potential finders or owners can reach you.</p>
+
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                        {% for error in form.name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control bg-light", readonly=True) }}
+                        <div class="form-text">Email address cannot be changed directly for security reasons.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.phone.label(class="form-label") }}
+                        {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else "")) }}
+                        {% for error in form.phone.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-check2-circle me-1"></i> Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

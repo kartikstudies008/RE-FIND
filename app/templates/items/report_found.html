@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Found Item – ReFind AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+                <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                    <div class="stat-icon found" style="width: 56px; height: 56px;">
+                        <i class="bi bi-check2-circle fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0">Report a Found Item</h3>
+                        <p class="text-muted small mb-0">Thank you for helping reunite someone with their lost property.</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-success border-0 rounded-3 mb-4 small d-flex align-items-center">
+                    <i class="bi bi-shield-check text-success fs-5 me-2"></i>
+                    <div>
+                        <strong>Safe Listing Notice:</strong> For sensitive items (like wallets or phones), do not reveal secret passwords or exact cash counts in public descriptions to verify rightful owners later.
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('main.report_found') }}" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            {{ form.item_name.label(class="form-label") }}
+                            {{ form.item_name(class="form-control" + (" is-invalid" if form.item_name.errors else ""), placeholder="e.g. Found Dell Black Laptop") }}
+                            {% for error in form.item_name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-5">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                            {% for error in form.category.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            {{ form.brand.label(class="form-label") }}
+                            {{ form.brand(class="form-control", placeholder="e.g. Dell, Apple, Fossil, Titan") }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.color.label(class="form-label") }}
+                            {{ form.color(class="form-control", placeholder="e.g. Black, Grey, Brown") }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-7">
+                            {{ form.location.label(class="form-label", text="Location Where Found") }}
+                            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""), placeholder="e.g. Near Panipat Railway Station ticket counter") }}
+                            {% for error in form.location.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-3">
+                            {{ form.date.label(class="form-label", text="Date Found") }}
+                            {{ form.date(class="form-control" + (" is-invalid" if form.date.errors else "")) }}
+                            {% for error in form.date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.time.label(class="form-label") }}
+                            {{ form.time(class="form-control") }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Describe visual condition, exterior stickers, brand logos, color patterns, or pouch...") }}
+                        {% for error in form.description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="mb-4">
+                        <label class="form-label">Upload Photo of Found Item (Optional)</label>
+                        <div class="upload-dropzone position-relative">
+                            {{ form.image(class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer") }}
+                            <div id="dropzone-placeholder">
+                                <i class="bi bi-camera fs-1 text-primary d-block mb-2"></i>
+                                <span class="fw-semibold">Click to upload or drag photo here</span>
+                                <div class="text-muted small">PNG, JPG, JPEG, WEBP (Max 16MB)</div>
+                            </div>
+                            <div id="image-preview-container" class="d-none mt-2">
+                                <img id="image-preview-img" src="" alt="Preview" class="rounded-3 shadow-sm" style="max-height: 200px; max-width: 100%;">
+                                <div class="text-success small mt-2"><i class="bi bi-check-circle me-1"></i> Image ready for upload</div>
+                            </div>
+                        </div>
+                        {% for error in form.image.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-emerald btn-lg py-3">
+                            <i class="bi bi-cpu me-1"></i> Submit Found Report &amp; Match Owners
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
