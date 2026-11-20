@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request 
 from app.models import Item, Match, User
 
 api_bp = Blueprint('api', __name__)
